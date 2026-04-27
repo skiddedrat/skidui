@@ -1395,7 +1395,7 @@ getgenv().Library = {
             Title = Data.Title or "RatUI";
             SubText = Data.SubText or "Modern";
             Size = Data.Size or UDim2.fromOffset(775, 531);
-            Image = Data.Image or "rbxassetid://15629471131";
+            Image = "rbxassetid://3204279122";
             IsMobile = Data.IsMobile or false;
 
             Position;
