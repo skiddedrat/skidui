@@ -74,7 +74,7 @@ if getgenv().Library and getgenv().Library.Unload then
 end
 
 getgenv().Library = {
-    Directory = "Fatalis",
+    Directory = "RatUI",
     Folders = {
         "/Fonts",
         "/Configs",
@@ -387,7 +387,7 @@ getgenv().Library = {
         local Instance = self.Instance
 
         local Dragging = false
-        local IntialSize = Instance.Position
+        local InitialSize = Instance.Position
         local InitialPosition
 
         Instance.InputBegan:Connect(function(Input)
@@ -406,17 +406,22 @@ getgenv().Library = {
 
         Library:Connect(Services.UserInputService.InputChanged, function(Input, GameEvent)
             if Dragging and (Input.UserInputType == Enum.UserInputType.MouseMovement or Input.UserInputType == Enum.UserInputType.Touch) then
-                local Horizontal = Camera.ViewportSize.X
-                local Vertical = Camera.ViewportSize.Y
+                local Viewport = Camera.ViewportSize
+                local Size = Instance.AbsoluteSize
+                local Anchor = Instance.AnchorPoint
+                local MinX = math.floor(Size.X * Anchor.X)
+                local MinY = math.floor(Size.Y * Anchor.Y)
+                local MaxX = math.floor(Viewport.X - (Size.X * (1 - Anchor.X)))
+                local MaxY = math.floor(Viewport.Y - (Size.Y * (1 - Anchor.Y)))
 
                 local NewPosition = UDim2.new(
-                    0,
-                    InitialSize.X.Offset + (Input.Position.X - InitialPosition.X),
-                    0,
-                    InitialSize.Y.Offset + (Input.Position.Y - InitialPosition.Y)
+                    InitialSize.X.Scale,
+                    math.clamp(InitialSize.X.Offset + (Input.Position.X - InitialPosition.X), MinX, MaxX),
+                    InitialSize.Y.Scale,
+                    math.clamp(InitialSize.Y.Offset + (Input.Position.Y - InitialPosition.Y), MinY, MaxY)
                 )
 
-                self:Tween({Position = NewPosition}, TweenInfo.new(Library.DraggingSpeed, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, 0, false, 0))
+                Instance.Position = NewPosition
             end
         end)
 
@@ -1387,8 +1392,8 @@ getgenv().Library = {
         local Self = self
 
         local Cfg = {
-            Title = Data.Title or "Fatalis";
-            SubText = Data.SubText or "Fallen Survival";
+            Title = Data.Title or "RatUI";
+            SubText = Data.SubText or "Modern";
             Size = Data.Size or UDim2.fromOffset(775, 531);
             Image = Data.Image or "rbxassetid://95259225424429";
             IsMobile = Data.IsMobile or false;
@@ -1401,6 +1406,7 @@ getgenv().Library = {
             Fps = 0;
             TabInfo;
             Visible = true;
+            TargetAvatarUserId = 0;
         } Library.Window = Cfg
 
         local Items = Cfg.Items; do
@@ -1428,7 +1434,7 @@ getgenv().Library = {
 
             Library:Create( "UICorner", {
                 Parent = Items.Menu.Instance;
-                CornerRadius = UDim.new(0, 10)
+                CornerRadius = UDim.new(0, 12)
             })
 
             Library:Create( "UIStroke", {
@@ -1645,8 +1651,8 @@ getgenv().Library = {
             -- // Target HUD
             Items.TargetHUD = Library:Create("Frame",{
                 Parent = Library.HUD.Instance;
-                Size = UDim2.new(0, 235, 0, 88);
-                Position = UDim2.new(1, -275, 0.5, 125);
+                Size = UDim2.new(0, 280, 0, 90);
+                Position = UDim2.fromOffset(910, 450);
                 BorderSizePixel = 0;
                 BackgroundColor3 = Themes.Preset.SectionBackground;
                 Visible = true;
@@ -1658,7 +1664,7 @@ getgenv().Library = {
             Items.TargetTitle = Library:Create("TextLabel",{
                 Parent = Items.TargetHUD.Instance;
                 BackgroundTransparency = 1;
-                Size = UDim2.new(1, 0, 0, 15);
+                Size = UDim2.new(1, 0, 0, 14);
                 BorderSizePixel = 0;
                 FontFace = Themes.Preset.Font;
                 Text = "TARGET HUD";
@@ -1667,11 +1673,23 @@ getgenv().Library = {
                 TextColor3 = Themes.Preset.Accent;
             }):Themify("Accent", "TextColor3")
 
+            Items.TargetAvatar = Library:Create("ImageLabel",{
+                Parent = Items.TargetHUD.Instance;
+                BackgroundColor3 = Themes.Preset.ElementBackground;
+                Position = UDim2.new(0, 0, 0, 19);
+                Size = UDim2.fromOffset(56, 56);
+                BorderSizePixel = 0;
+                ScaleType = Enum.ScaleType.Crop;
+                Image = "";
+            }):Themify("ElementBackground", "BackgroundColor3")
+            Library:Create("UICorner",{Parent = Items.TargetAvatar.Instance; CornerRadius = UDim.new(0, 8)})
+            Library:Create("UIStroke",{Parent = Items.TargetAvatar.Instance; Color = Themes.Preset.Inline}):Themify("Inline", "Color")
+
             Items.TargetName = Library:Create("TextLabel",{
                 Parent = Items.TargetHUD.Instance;
                 BackgroundTransparency = 1;
-                Position = UDim2.new(0, 0, 0, 18);
-                Size = UDim2.new(1, 0, 0, 17);
+                Position = UDim2.new(0, 67, 0, 20);
+                Size = UDim2.new(1, -67, 0, 17);
                 BorderSizePixel = 0;
                 FontFace = Themes.Preset.Font;
                 Text = "No target";
@@ -1683,8 +1701,8 @@ getgenv().Library = {
             Items.TargetInfo = Library:Create("TextLabel",{
                 Parent = Items.TargetHUD.Instance;
                 BackgroundTransparency = 1;
-                Position = UDim2.new(0, 0, 0, 37);
-                Size = UDim2.new(1, 0, 0, 15);
+                Position = UDim2.new(0, 67, 0, 40);
+                Size = UDim2.new(1, -67, 0, 15);
                 BorderSizePixel = 0;
                 FontFace = Themes.Preset.Font;
                 Text = "HP: -- | Dist: --";
@@ -1695,8 +1713,8 @@ getgenv().Library = {
 
             Items.TargetBar = Library:Create("Frame",{
                 Parent = Items.TargetHUD.Instance;
-                Position = UDim2.new(0, 0, 0, 58);
-                Size = UDim2.new(1, 0, 0, 12);
+                Position = UDim2.new(0, 67, 0, 60);
+                Size = UDim2.new(1, -67, 0, 13);
                 BorderSizePixel = 0;
                 BackgroundColor3 = Themes.Preset.ElementBackground;
             }):Themify("ElementBackground", "BackgroundColor3")
@@ -1749,7 +1767,7 @@ getgenv().Library = {
 
         Items.Watermark:AddGlow({Amount = 5, DampingFactor = 0.6})
 
-        Items.Title.Instance.Text = "Fatalis Public | Fallen Survival | Exec: " .. tostring(identifyexecutor())
+        Items.Title.Instance.Text = "RatUI Public | Modern Combat UI | Exec: " .. tostring(identifyexecutor())
         --Items.Title.Instance.Text = string.format("%s | FPS: %s | %s", Cfg.Title, tostring(FPS), os.date("%H:%M:%S"))
 
         local AbsoluteSize = Items.Menu.Instance.AbsoluteSize
@@ -1794,6 +1812,8 @@ getgenv().Library = {
                 Items.TargetInfo.Instance.Text = "HP: -- | Dist: --"
                 Items.TargetBarText.Instance.Text = "0%"
                 Items.TargetBarFill.Instance.Size = UDim2.new(0, 0, 1, 0)
+                Items.TargetAvatar.Instance.Image = ""
+                Cfg.TargetAvatarUserId = 0
                 return
             end
 
@@ -1804,7 +1824,21 @@ getgenv().Library = {
             Items.TargetName.Instance.Text = ClosestPlayer.DisplayName .. " (@" .. ClosestPlayer.Name .. ")"
             Items.TargetInfo.Instance.Text = string.format("HP: %d/%d | Dist: %d", math.floor(Health + 0.5), math.floor(MaxHealth + 0.5), math.floor(Distance + 0.5))
             Items.TargetBarText.Instance.Text = string.format("%d%%", math.floor((Percent * 100) + 0.5))
-            Items.TargetBarFill:Tween({Size = UDim2.new(Percent, 0, 1, 0)}, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.Out))
+            Items.TargetBarFill.Instance.Size = UDim2.new(Library:Lerp(Items.TargetBarFill.Instance.Size.X.Scale, Percent, 0.3), 0, 1, 0)
+
+            if Cfg.TargetAvatarUserId ~= ClosestPlayer.UserId then
+                Cfg.TargetAvatarUserId = ClosestPlayer.UserId
+
+                local Success, Image = pcall(function()
+                    return Services.Players:GetUserThumbnailAsync(ClosestPlayer.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100)
+                end)
+
+                if Success then
+                    Items.TargetAvatar.Instance.Image = Image
+                else
+                    Items.TargetAvatar.Instance.Image = ""
+                end
+            end
         end
 
         if Cfg.IsMobile then
@@ -1856,7 +1890,7 @@ getgenv().Library = {
 
                 Library:Create( "UICorner", {
                     Parent = Items.Button.Instance;
-                    CornerRadius = UDim.new(0, 6)
+                    CornerRadius = UDim.new(0, 8)
                 })
 
                 Library:Create( "ImageLabel", {
@@ -4032,8 +4066,8 @@ end
 
 local Flags = Library.Flags
 local Window = Library:CreateWindow({
-    Title = "Fatalis",
-    SubText = "Fallen Survival", -- Replace with game shortened strings.
+    Title = "RatUI",
+    SubText = "Clean Rework", -- Replace with game shortened strings.
     Size = UDim2.fromOffset(775, 531),
     Image = "rbxassetid://134436912645229",
     IsMobile = false;
